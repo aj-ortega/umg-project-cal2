@@ -1,18 +1,23 @@
 from openai import OpenAI
 
-# Conectamos el cliente al endpoint local de Ollama
+# Cliente apuntando a tu Ollama local
 client = OpenAI(
-    base_url="http://localhost:11434/v1",  # API local de Ollama
-    api_key="ollama"  # no se usa, pero el cliente lo requiere
+    base_url="http://localhost:11434/v1",  # API de Ollama
+    api_key="ollama"  # No se valida, solo requerido por la librería
 )
 
-# Generar texto con el modelo Qwen2.5
-response = client.chat.completions.create(
+print("💬 Generando respuesta...\n")
+
+# Hacemos la petición en modo streaming
+with client.chat.completions.stream(
     model="qwen2.5",
     messages=[
-        {"role": "system", "content": "Eres un asistente útil."},
-        {"role": "user", "content": "Explícame qué es Docker Compose."}
-    ]
-)
+        {"role": "system", "content": "Eres un asistente útil que responde en español."},
+        {"role": "user", "content": "Explícame brevemente cómo funciona Docker Compose."}
+    ],
+) as stream:
+    for event in stream:
+        if event.type == "message.delta" and event.delta.content:
+            print(event.delta.content, end="", flush=True)
+    print()  # Salto de línea final
 
-print(response.choices[0].message.content)
